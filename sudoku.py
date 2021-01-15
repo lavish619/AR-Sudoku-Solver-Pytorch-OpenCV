@@ -1,5 +1,5 @@
 
-grid = [ [ 3, 0, 6, 5, 0, 8, 4, 0, 0 ],
+board = [ [ 3, 0, 6, 5, 0, 8, 4, 0, 0 ],
          [ 5, 2, 0, 0, 0, 0, 0, 0, 0 ],
          [ 0, 8, 7, 0, 0, 0, 0, 3, 1 ],
          [ 0, 0, 3, 0, 1, 0, 0, 8, 0 ],
@@ -10,7 +10,6 @@ grid = [ [ 3, 0, 6, 5, 0, 8, 4, 0, 0 ],
          [ 0, 0, 5, 2, 0, 6, 3, 0, 0 ] ];
 
 def isvalid(grid, row, col, num):
-
     #check row
     for i in range(9):
         if grid[row][i]== num:
@@ -23,41 +22,32 @@ def isvalid(grid, row, col, num):
     #check 3x3 block of element
     for i in range(3):
         for j in range(3):
-            if grid[i+ (row - row%3)][j+ (col - col%3)]== num:
+            if grid[i+ (row//3)*3][j+ (col//3)*3]== num:
                 return False
-
     return True
-    
-def solve(grid, x, y):
-    print(x,y)
-   # print(grid)
-    if y==8 and x==9:
-        print("yesss")
-        #print(grid)
-        return True
-    
-    if x==9:
-        x=0
-        y=y+1
-        
-    if grid[x][y]>0:
-        solve(grid, x+1 , y)
-    
-    for i in range(1,10):
-        if isvalid(grid, x, y, i):
-            grid[x][y] = i
-        
-            if solve(grid, x+1, y):
-                return True
-        
-        grid[x][y]=0
 
-    return False
 
-def main():
-    solve(grid,0,0)
+def solve(grid):
+    for row in range(9):
+        for col in range(9):
+            if grid[row][col] == 0:
+                #print(str(row)+str(col), end = "  ")
+                for num in range(1,10):
+                    if isvalid(grid, row, col, num):
+                        
+                        grid[row][col]= num
+                        grid = solve(grid)
+                        grid[row][col] = 0
+                return grid
+            
+    print(grid)
+    return grid
+
+
+anser = solve(board)
+print(anser)
+
     
 
-if __name__ == '__main__':
-    main()
+
     
