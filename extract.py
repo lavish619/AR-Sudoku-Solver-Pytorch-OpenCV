@@ -22,11 +22,32 @@ def read_process_image(path):
     
 
 def get_contours(img):
-    pass
+
+    #for contour detection, it needs object to be found as white in a black background.
+    # so, first we will invert the image.
+    img = cv2.bitwise_not(img,img)
+    
+    # now find contours
+    #outer contours(boundry of sudoku)
+    ext_contours, heirarchy = cv2.findContours(img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    
+    #all contours(numbers, grid lines)
+    contours, heirarchy = cv2.findContours(img, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+
+##    img2 = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
+##    ext_cont_image = cv2.drawContours(img2.copy(), ext_contours, -1, (0, 255, 0), 2)
+##    all_cont_image = cv2.drawContours(img2.copy(), contours, -1, (0, 255, 0), 2)
+    
+##    cv2.imshow("external_contours",ext_cont_image)
+##    cv2.imshow("all_contours",all_cont_image)
+##    
+##    cv2.waitKey(0)
+    
+    return img, ext_contours 
     
 def get_sudoku(path):
     img = read_process_image(path)
-    get_contours(img)
+    img, ext_contours = get_contours(img)
     
     
 
