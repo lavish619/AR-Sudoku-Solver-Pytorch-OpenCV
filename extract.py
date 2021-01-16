@@ -9,15 +9,18 @@ def show_image(img):
     cv2.destroyAllWindows()
     
 def display_contours(img, contours, color = (0,255 , 0), thickness = 2 ):
+    img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
     cont_image = cv2.drawContours(img, contours, -1, color, thickness)
     show_image(cont_image)
 
-def display_corners(img, corners, colour=(0, 0, 255),radius=10):
-    img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
+def display_corners(img, corners, colour=(0, 0, 255),radius=7):
+    img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
     for corner in corners:
         #print(corner)
         img = cv2.circle(img, tuple(corner), radius, colour, -1)
     show_image(img)
+
+
     
 def read_process_image(path):
     img = cv2.imread(path, 0) #0 is flag for grayscale(cv2.IMREAD_GRAYSCALE)
@@ -50,8 +53,10 @@ def get_contours(img, show_contours):
     #all contours(numbers, grid lines)
     contours, _ = cv2.findContours(img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
+    # Now invert the image again after finding contours
+    img = cv2.bitwise_not(img,img)
+    
     if show_contours:
-        img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
         display_contours(img, ext_contours)
         display_contours(img, contours)
 
@@ -61,7 +66,7 @@ def get_contours(img, show_contours):
 def get_corners(img, contours, show_corners):
     contours = sorted(contours, key=cv2.contourArea)# Sorting contours by area in ascending order
     box = contours[-1]
-##    print(box) #printing this box will help in understanding the code written below to find corners.
+##    print(box) #printing the box will help in understanding the code written below to find corners.
     
 
     #A function to obtain the element at 1st position of an element
@@ -90,15 +95,75 @@ def get_corners(img, contours, show_corners):
         display_corners(img, corners)
 
     return corners
+
+def get_cropimage(img, corners):
+
+    top_left, top_right, bottom_left, bottom_right = corners
     
-def get_sudoku(path, show_contours = False, show_corners = False):
+    def distance_between(p1, p2):
+        #Gives the distance between two pixels
+        a = p2[0] - p1[0]
+        b = p2[1] - p1[1]
+        return np.sqrt((a ** 2) + (b ** 2))
+    
+    input_pts = np.array([top_left+3, top_right, bottom_left, bottom_right], dtype= 'float32')
+
+    # Get the longest length in the rectangle
+    length = max([
+            distance_between(bottom_right, top_right),
+            distance_between(top_left, bottom_left),
+            distance_between(bottom_right, bottom_left),
+            distance_between(top_left, top_right)
+            ])
+    
+    length = length -5 #this is done to slightly compensate for the thick outer gridline
+
+    output_pts = np.array([[0,0],[length,0],[0,length],[length,length]], dtype= 'float32')
+
+    # Gets the transformation matrix for skewing the image to
+    # fit a square by comparing the 4 before and after points
+    m = cv2.getPerspectiveTransform(input_pts, output_pts)
+
+    # Performs the transformation on the original image
+    return cv2.warpPerspective(img, m, (int(length), int(length)))
+
+def display_gridlines(img, color = (255,0,0)):
+    
+    side = img.shape
+    side = side[0] / 9
+    side = int(side)
+    img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
+    for i in range(9):
+        img = cv2.line(img, (side*(i+1),0),(side*(i+1),side*9), color)
+        img = cv2.line(img, (0,side*(i+1)),(side*9,side*(i+1)), color)
+    show_image(img)
+    
+def obtain_grid(img, show_grid):
+    """Infers 81 cell grid from a square image."""
+    squares = []
+    side = img.shape
+    side = side[0] / 9
+    for i in range(9):
+        for j in range(9):
+            p1 = (i * side, j * side)  # Top left corner of a bounding box
+            p2 = ((i + 1) * side, (j + 1) * side)  # Bottom right corner of bounding box
+            squares.append((p1, p2))
+    
+    if show_grid:
+        display_gridlines(img)
+    
+    return squares
+    
+    
+def get_sudoku(path, show_contours = False, show_corners = False, show_grid = False):
     img = read_process_image(path)
     img, ext_contours = get_contours(img, show_contours)
-    corners = get_corners(img.copy(), ext_contours, show_corners)
-    #print(corners)
+    corners = get_corners(img, ext_contours, show_corners)
+    image = get_cropimage(img, corners)
+    squares = obtain_grid(image, show_grid)
     
     
     
 
-get_sudoku(path,show_contours = False, show_corners = False)
+get_sudoku(path,show_contours = False, show_corners = False, show_grid = False)
 
