@@ -1,28 +1,38 @@
 import cv2
 import numpy as np
+import keras
 
-path = r'C:\Users\asus\Desktop\Sudoku-Solver\board.png'
+def load_model():
+    model = keras.models.load_model(r"")
+    return model
+    
 
 def show_image(img):
+    '''function to show an image'''
+    
     cv2.imshow("image", img)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
     
 def display_contours(img, contours, color = (0,255 , 0), thickness = 2 ):
+    '''function to display identified contours of sudoku board'''
+    
     img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
     cont_image = cv2.drawContours(img, contours, -1, color, thickness)
     show_image(cont_image)
 
+
 def display_corners(img, corners, colour=(0, 0, 255),radius=7):
+    '''function to display corners of sudoku board'''
+    
     img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
     for corner in corners:
-        #print(corner)
         img = cv2.circle(img, tuple(corner), radius, colour, -1)
     show_image(img)
 
-
     
 def read_process_image(path):
+    
     img = cv2.imread(path, 0) #0 is flag for grayscale(cv2.IMREAD_GRAYSCALE)
 
     #gaussian blurring
@@ -33,10 +43,10 @@ def read_process_image(path):
     img = cv2.adaptiveThreshold(img, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2)
 
     # Now to make text and gridlines more bolder.we will do erosion so
-    # that zero pixel values of text, gridlines will erode the non-zero
+    # that zero(black) pixel values of text and gridlines will erode the non-zero(white)
     #pixel values and text becomes bolder.
     kernel = np.ones((2,2),np.uint8)
-    img = cv2.erode(img,kernel,iterations = 1)
+    img = cv2.morphologyEx(img, cv2.MORPH_OPEN, kernel) #erosion followed by dilation (cv2.MORPH_OPEN)
 
     return img
     
@@ -125,12 +135,13 @@ def get_cropimage(img, corners):
     m = cv2.getPerspectiveTransform(input_pts, output_pts)
 
     # Performs the transformation on the original image
-    return cv2.warpPerspective(img, m, (int(length), int(length)))
+    warped = cv2.warpPerspective(img, m, (int(length), int(length)))
+    
+    return warped
 
 def display_gridlines(img, color = (255,0,0)):
     
-    side = img.shape
-    side = side[0] / 9
+    side = img.shape[0]/9
     side = int(side)
     img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
     for i in range(9):
@@ -140,30 +151,73 @@ def display_gridlines(img, color = (255,0,0)):
     
 def obtain_grid(img, show_grid):
     """Infers 81 cell grid from a square image."""
-    squares = []
-    side = img.shape
-    side = side[0] / 9
+    grid_nums = []
+    side = img.shape[0]/9
+    side = int(side)
     for i in range(9):
         for j in range(9):
-            p1 = (i * side, j * side)  # Top left corner of a bounding box
-            p2 = ((i + 1) * side, (j + 1) * side)  # Bottom right corner of bounding box
-            squares.append((p1, p2))
+            cell = img[side*i:side*(i+1), side*j:side*(j+1)]
+            grid_nums.append(cell)
     
     if show_grid:
         display_gridlines(img)
     
-    return squares
+    return grid_nums
+
+def clasify_digits(images):
+
     
+    threshold = 20
+    image_count = 0
+    labels = np.zeros((9,9), dtype = int)
+    
+    for image in images:
+        '''Initally we classify all blank cells as zeros so counting number of black pixels
+        in an image and setting a threshold value for it can help us identify it.
+
+        Then for every cell containing a number, we will use a pretrained model on mnist dataset
+        to identify the digit'''
+        
+        #removing border strips of cells that might contain grid line pixel values
+        image = image[10:-10, 10:-10]
+        
+        image = np.ndarray.flatten(image)
+
+        #count number of black pixels i.e. numbers
+        count =0
+        for pixel in image:
+            if pixel==0:
+                count = count+1
+        print(count,end =" " )
+        
+        if count< threshold:
+            #if it's a blank cell, take it as zero in the labels.
+            continue
+        
+        #resize to standard mnist image input size
+        image = cv2.resize(image, (28,28))
+##        model = load_model()
+##        label = model.predict(image)
+##        labels[image_count/9, image_count%9] = label[0]
+        image_count = image_count + 1
+        
+##    return labels
+        
+        
     
 def get_sudoku(path, show_contours = False, show_corners = False, show_grid = False):
     img = read_process_image(path)
     img, ext_contours = get_contours(img, show_contours)
     corners = get_corners(img, ext_contours, show_corners)
     image = get_cropimage(img, corners)
-    squares = obtain_grid(image, show_grid)
+    num_imgs = obtain_grid(image, show_grid)
     
+    labels = clasify_digits(num_imgs)
     
-    
+    return num_imgs
 
-get_sudoku(path,show_contours = False, show_corners = False, show_grid = False)
+path1 = r'C:\Users\asus\Desktop\Sudoku-Solver\board.png'
+squares = get_sudoku(path1, show_contours = False, show_corners = False, show_grid = True)
 
+
+#print(squares[])
