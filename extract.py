@@ -1,11 +1,7 @@
 import cv2
 import numpy as np
-import keras
+from tensorflow.keras.models import load_model
 
-def load_model():
-    model = keras.models.load_model(r"")
-    return model
-    
 
 def show_image(img):
     '''function to show an image'''
@@ -136,6 +132,7 @@ def get_cropimage(img, corners):
 
     # Performs the transformation on the original image
     warped = cv2.warpPerspective(img, m, (int(length), int(length)))
+##    warped = cv2.cvtColor(warped, cv2.COLOR_GRAY2BGR)
     
     return warped
 
@@ -170,6 +167,7 @@ def clasify_digits(images):
     threshold = 20
     image_count = 0
     labels = np.zeros((9,9), dtype = int)
+    model = load_model("cnn.h5")
     
     for image in images:
         '''Initally we classify all blank cells as zeros so counting number of black pixels
@@ -181,14 +179,14 @@ def clasify_digits(images):
         #removing border strips of cells that might contain grid line pixel values
         image = image[10:-10, 10:-10]
         
-        image = np.ndarray.flatten(image)
+        flat_image = np.ndarray.flatten(image)
 
         #count number of black pixels i.e. numbers
         count =0
-        for pixel in image:
+        for pixel in flat_image:
             if pixel==0:
                 count = count+1
-        print(count,end =" " )
+        #print(count,end =" " )
         
         if count< threshold:
             #if it's a blank cell, take it as zero in the labels.
@@ -196,12 +194,16 @@ def clasify_digits(images):
         
         #resize to standard mnist image input size
         image = cv2.resize(image, (28,28))
-##        model = load_model()
-##        label = model.predict(image)
-##        labels[image_count/9, image_count%9] = label[0]
+        image = np.expand_dims(image,axis=-1)
+        image = image.reshape([1]+list(image.shape))
+        print(image.shape)
+        
+        label = np.argmax(model.predict(x), axis=-1)
+        print(label)
+        labels[image_count/9, image_count%9] = label
         image_count = image_count + 1
         
-##    return labels
+    return labels
         
         
     
@@ -214,10 +216,11 @@ def get_sudoku(path, show_contours = False, show_corners = False, show_grid = Fa
     
     labels = clasify_digits(num_imgs)
     
-    return num_imgs
+    return labels
 
 path1 = r'C:\Users\asus\Desktop\Sudoku-Solver\board.png'
-squares = get_sudoku(path1, show_contours = False, show_corners = False, show_grid = True)
+labels = get_sudoku(path1, show_contours = False, show_corners = False, show_grid = False)
+print(labels)
 
 
 #print(squares[])
