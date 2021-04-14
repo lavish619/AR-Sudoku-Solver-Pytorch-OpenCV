@@ -2,7 +2,7 @@ import numpy as np
 from tensorflow.keras.models import load_model
 import cv2
 
-MODEL = "cnn.h5"
+MODEL = "src/cnn.h5"
 
 def classify_digits(images):
     threshold = 20

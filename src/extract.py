@@ -3,7 +3,7 @@ import numpy as np
 from math import floor
 from tensorflow.keras.models import load_model
 
-from classify import classify_digits
+from src.classify import classify_digits
 
 def show_image(img):
     '''function to show an image'''

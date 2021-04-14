@@ -1,14 +1,5 @@
-from extract import get_sudoku
-
-board = [ [ 3, 0, 6, 5, 0, 8, 4, 0, 0 ],
-         [ 5, 2, 0, 0, 0, 0, 0, 0, 0 ],
-         [ 0, 8, 7, 0, 0, 0, 0, 3, 1 ],
-         [ 0, 0, 3, 0, 1, 0, 0, 8, 0 ],
-         [ 9, 0, 0, 8, 6, 3, 0, 0, 5 ],
-         [ 0, 5, 0, 0, 9, 0, 6, 0, 0 ],
-         [ 1, 3, 0, 0, 0, 0, 2, 5, 0 ],
-         [ 0, 0, 0, 0, 0, 0, 0, 7, 4 ],
-         [ 0, 0, 5, 2, 0, 6, 3, 0, 0 ] ];
+from src.extract import get_sudoku
+import numpy as np
 
 def isvalid(grid, row, col, num):
     #check row
@@ -46,6 +37,19 @@ def solve(grid):
 
 path1 = r'C:\Users\asus\Desktop\Sudoku-Solver\images\board.png'
 board = get_sudoku(path1, show_contours = False, show_corners = False, show_grid = False)
+print(board)
+
+print("classification model left to be added, so solving a original sudoku.")
+board = np.array([[ 3, 0, 6, 5, 0, 8, 4, 0, 0 ],
+         [ 5, 2, 0, 0, 0, 0, 0, 0, 0 ],
+         [ 0, 8, 7, 0, 0, 0, 0, 3, 1 ],
+         [ 0, 0, 3, 0, 1, 0, 0, 8, 0 ],
+         [ 9, 0, 0, 8, 6, 3, 0, 0, 5 ],
+         [ 0, 5, 0, 0, 9, 0, 6, 0, 0 ],
+         [ 1, 3, 0, 0, 0, 0, 2, 5, 0 ],
+         [ 0, 0, 0, 0, 0, 0, 0, 7, 4 ],
+         [ 0, 0, 5, 2, 0, 6, 3, 0, 0 ]]);
+
 print(board)
 answer = solve(board)
 # print(answer)
