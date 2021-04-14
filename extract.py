@@ -1,7 +1,9 @@
 import cv2
 import numpy as np
+from math import floor
 from tensorflow.keras.models import load_model
 
+from classify import classify_digits
 
 def show_image(img):
     '''function to show an image'''
@@ -28,12 +30,11 @@ def display_corners(img, corners, colour=(0, 0, 255),radius=7):
 
     
 def read_process_image(path):
-    
     img = cv2.imread(path, 0) #0 is flag for grayscale(cv2.IMREAD_GRAYSCALE)
 
     #gaussian blurring
     kernel_size = (9,9) #Tried other values but found (9,9)is the best kernel size.
-    img = cv2.GaussianBlur(img.copy(), kernel_size, 0)
+    img = cv2.GaussianBlur(img, kernel_size, 0)
     
     #thresholding
     img = cv2.adaptiveThreshold(img, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2)
@@ -133,7 +134,6 @@ def get_cropimage(img, corners):
     # Performs the transformation on the original image
     warped = cv2.warpPerspective(img, m, (int(length), int(length)))
 ##    warped = cv2.cvtColor(warped, cv2.COLOR_GRAY2BGR)
-    
     return warped
 
 def display_gridlines(img, color = (255,0,0)):
@@ -142,8 +142,8 @@ def display_gridlines(img, color = (255,0,0)):
     side = int(side)
     img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
     for i in range(9):
-        img = cv2.line(img, (side*(i+1),0),(side*(i+1),side*9), color)
-        img = cv2.line(img, (0,side*(i+1)),(side*9,side*(i+1)), color)
+        img = cv2.line(img, (floor(side*(i+1)),0),(floor(side*(i+1)),floor(side*9)), color)
+        img = cv2.line(img, (0,floor(side*(i+1))),(floor(side*9),floor(side*(i+1))), color)
     show_image(img)
     
 def obtain_grid(img, show_grid):
@@ -159,54 +159,8 @@ def obtain_grid(img, show_grid):
     if show_grid:
         display_gridlines(img)
     
-    return grid_nums
-
-def clasify_digits(images):
-
-    
-    threshold = 20
-    image_count = 0
-    labels = np.zeros((9,9), dtype = int)
-    model = load_model("cnn.h5")
-    
-    for image in images:
-        '''Initally we classify all blank cells as zeros so counting number of black pixels
-        in an image and setting a threshold value for it can help us identify it.
-
-        Then for every cell containing a number, we will use a pretrained model on mnist dataset
-        to identify the digit'''
+    return grid_nums        
         
-        #removing border strips of cells that might contain grid line pixel values
-        image = image[10:-10, 10:-10]
-        
-        flat_image = np.ndarray.flatten(image)
-
-        #count number of black pixels i.e. numbers
-        count =0
-        for pixel in flat_image:
-            if pixel==0:
-                count = count+1
-        #print(count,end =" " )
-        
-        if count< threshold:
-            #if it's a blank cell, take it as zero in the labels.
-            continue
-        
-        #resize to standard mnist image input size
-        image = cv2.resize(image, (28,28))
-        image = np.expand_dims(image,axis=-1)
-        image = image.reshape([1]+list(image.shape))
-        print(image.shape)
-        
-        label = np.argmax(model.predict(x), axis=-1)
-        print(label)
-        labels[image_count/9, image_count%9] = label
-        image_count = image_count + 1
-        
-    return labels
-        
-        
-    
 def get_sudoku(path, show_contours = False, show_corners = False, show_grid = False):
     img = read_process_image(path)
     img, ext_contours = get_contours(img, show_contours)
@@ -214,13 +168,6 @@ def get_sudoku(path, show_contours = False, show_corners = False, show_grid = Fa
     image = get_cropimage(img, corners)
     num_imgs = obtain_grid(image, show_grid)
     
-    labels = clasify_digits(num_imgs)
+    labels = classify_digits(num_imgs)
     
     return labels
-
-path1 = r'C:\Users\asus\Desktop\Sudoku-Solver\board.png'
-labels = get_sudoku(path1, show_contours = False, show_corners = False, show_grid = False)
-print(labels)
-
-
-#print(squares[])

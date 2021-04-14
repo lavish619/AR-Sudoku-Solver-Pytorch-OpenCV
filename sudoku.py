@@ -1,3 +1,4 @@
+from extract import get_sudoku
 
 board = [ [ 3, 0, 6, 5, 0, 8, 4, 0, 0 ],
          [ 5, 2, 0, 0, 0, 0, 0, 0, 0 ],
@@ -43,11 +44,9 @@ def solve(grid):
     print(grid)
     return grid
 
-
-anser = solve(board)
-print(anser)
-
-    
-
-
+path1 = r'C:\Users\asus\Desktop\Sudoku-Solver\images\board.png'
+board = get_sudoku(path1, show_contours = False, show_corners = False, show_grid = False)
+print(board)
+answer = solve(board)
+# print(answer)
     
