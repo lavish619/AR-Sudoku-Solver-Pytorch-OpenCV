@@ -4,12 +4,12 @@ import cv2
 from src.model import Model
 
 MODEL_PATH= "model.pt"
-model = Model()
 
 def classify_digits(images):
     threshold = 20
     image_count = -1
     labels = np.zeros((9,9), dtype = int)
+    model = Model(1,10)
     model.load_state_dict(torch.load(MODEL_PATH))
     model = model.to(torch.device("cpu"))
     
@@ -37,10 +37,11 @@ def classify_digits(images):
             continue
         
         #resize to standard mnist image input size
-        image = cv2.resize(image, (28,28))
-        image = np.expand_dims(image,axis=-1)
-        image = image.reshape([1]+list(image.shape))        
-        label = np.argmax(model.predict(image), axis=-1)
+        image = cv2.resize(image, (32,32))/255.0
+        image = torch.tensor(image, dtype = torch.float)
+        image = image.unsqueeze(0)
+        image = image.unsqueeze(1)
+        label = np.argmax(model(image).detach().numpy(), axis=-1)
 #         print(label)
         labels[image_count//9, image_count%9] = label
         
