@@ -1,7 +1,6 @@
 import cv2
 import numpy as np
 from math import floor
-from tensorflow.keras.models import load_model
 
 from src.classify import classify_digits
 

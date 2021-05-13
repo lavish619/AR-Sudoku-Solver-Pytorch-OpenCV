@@ -1,14 +1,17 @@
+import torch
 import numpy as np
-from tensorflow.keras.models import load_model
 import cv2
+from src.model import Model
 
-MODEL = "src/cnn.h5"
+MODEL_PATH= "model.pt"
+model = Model()
 
 def classify_digits(images):
     threshold = 20
     image_count = -1
     labels = np.zeros((9,9), dtype = int)
-    model = load_model(MODEL)
+    model.load_state_dict(torch.load(MODEL_PATH))
+    model = model.to(torch.device("cpu"))
     
     for image in images:
         '''Initally we classify all blank cells as zeros so counting number of black pixels
