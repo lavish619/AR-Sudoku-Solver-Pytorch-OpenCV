@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 from math import floor
+import matplotlib.pyplot as plt
 
 from src.classify import classify_digits
 
@@ -29,7 +30,8 @@ def display_corners(img, corners, colour=(0, 0, 255),radius=7):
 
     
 def read_process_image(path):
-    img = cv2.imread(path, 0) #0 is flag for grayscale(cv2.IMREAD_GRAYSCALE)
+    orig_img = cv2.imread(path)
+    img = cv2.cvtColor(orig_img, cv2.COLOR_BGR2GRAY)
 
     #gaussian blurring
     kernel_size = (9,9) #Tried other values but found (9,9)is the best kernel size.
@@ -44,7 +46,7 @@ def read_process_image(path):
     kernel = np.ones((2,2),np.uint8)
     img = cv2.morphologyEx(img, cv2.MORPH_OPEN, kernel) #erosion followed by dilation (cv2.MORPH_OPEN)
 
-    return img
+    return orig_img, img
     
 def get_contours(img, show_contours):
 
@@ -67,7 +69,7 @@ def get_contours(img, show_contours):
         display_contours(img, contours)
 
     # we need only external contours
-    return img, ext_contours
+    return ext_contours
 
 def get_corners(img, contours, show_corners):
     contours = sorted(contours, key=cv2.contourArea)# Sorting contours by area in ascending order
@@ -95,16 +97,16 @@ def get_corners(img, contours, show_corners):
     bottom_left = box[bottom_left][0]
     top_right = box[top_right][0]
 
-    corners = (top_left, top_right, bottom_left, bottom_right)
+    corners = (top_left, top_right, bottom_right, bottom_left )
 
     if show_corners:
         display_corners(img, corners)
 
     return corners
 
-def get_cropimage(img, corners):
+def get_cropimage(img, orig_img, corners):
 
-    top_left, top_right, bottom_left, bottom_right = corners
+    top_left, top_right, bottom_right, bottom_left  = corners
     
     def distance_between(p1, p2):
         #Gives the distance between two pixels
@@ -132,8 +134,9 @@ def get_cropimage(img, corners):
 
     # Performs the transformation on the original image
     warped = cv2.warpPerspective(img, m, (int(length), int(length)))
+    orig_warped = cv2.warpPerspective(orig_img, m, (int(length), int(length)))
 ##    warped = cv2.cvtColor(warped, cv2.COLOR_GRAY2BGR)
-    return warped
+    return warped, orig_warped, m
 
 def display_gridlines(img, color = (255,0,0)):
     
@@ -147,7 +150,7 @@ def display_gridlines(img, color = (255,0,0)):
     
 def obtain_grid(img, show_grid):
     """Infers 81 cell grid from a square image."""
-    grid_nums = []
+    grid_nums= []
     side = img.shape[0]/9
     side = int(side)
     for i in range(9):
@@ -158,15 +161,15 @@ def obtain_grid(img, show_grid):
     if show_grid:
         display_gridlines(img)
     
-    return grid_nums        
+    return grid_nums       
         
 def get_sudoku(path, show_contours = False, show_corners = False, show_grid = False):
-    img = read_process_image(path)
-    img, ext_contours = get_contours(img, show_contours)
+    orig_img, img = read_process_image(path)
+    ext_contours = get_contours(img, show_contours)
     corners = get_corners(img, ext_contours, show_corners)
-    image = get_cropimage(img, corners)
+    image, orig_warped_img, matrix  = get_cropimage(img, orig_img, corners)
     num_imgs = obtain_grid(image, show_grid)
     
     labels = classify_digits(num_imgs)
     
-    return labels
+    return labels, corners, orig_img, orig_warped_img
