@@ -10,8 +10,7 @@ def classify_digits(images):
     image_count = -1
     labels = np.zeros((9,9), dtype = int)
     model = Model(1,10)
-    model.load_state_dict(torch.load(MODEL_PATH))
-    model = model.to(torch.device("cpu"))
+    model.load_state_dict(torch.load(MODEL_PATH, map_location = torch.device("cpu")))
     
     for image in images:
         '''Initally we classify all blank cells as zeros so counting number of black pixels

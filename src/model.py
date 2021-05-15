@@ -11,7 +11,7 @@ class Model(nn.Module):
         self.max_pool = nn.MaxPool2d(2)
         self.relu = nn.ReLU()
         self.linear = nn.Linear(64*6*6, output_size)
-        self.softmax = nn.Softmax()
+        self.softmax = nn.Softmax(dim=-1)
     
     def forward(self, x):
         x = self.relu(self.conv1(x))
