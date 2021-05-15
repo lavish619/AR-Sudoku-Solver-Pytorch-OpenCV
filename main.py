@@ -2,7 +2,7 @@ from src.extract import get_sudoku
 from src.sudoku import solve, verify
 import numpy as np
 import copy
-import cv
+import cv2
 import math
 
 def write_solution_on_image(image, grid, user_grid):
