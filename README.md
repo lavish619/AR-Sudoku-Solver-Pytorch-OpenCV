@@ -46,3 +46,12 @@ Complete code is present in Sudoku Training.ipynb Notebook.
 **Weights and Biases** is used for model tracking while training which is an amazing tool for experimentation, visualization and improving models.
 
 ## References
+* [OpenCV Sudoku Solver and OCR](https://www.pyimagesearch.com/2020/08/10/opencv-sudoku-solver-and-ocr/)
+
+* [Sudoku Solver using Computer Vision and Deep Learning](https://aakashjhawar.medium.com/sudoku-solver-using-opencv-and-dl-part-1-490f08701179) 
+
+* [Wights and Biases PyTorch Integration for Model training](https://docs.wandb.ai/guides/integrations/pytorch) 
+
+And some other resources....
+ 
+Feel free to raise an issue in case of any corrections.
