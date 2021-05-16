@@ -1,7 +1,6 @@
 import cv2
 import numpy as np
 from math import floor
-import matplotlib.pyplot as plt
 
 from src.classify import classify_digits
 
